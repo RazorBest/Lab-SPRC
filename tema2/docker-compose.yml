@@ -1,0 +1,40 @@
+services:
+  db:
+    image: "postgres:${DOCKER_COMPOSE_VERSION:-15}"
+    environment:
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./initdb.d:/docker-entrypoint-initdb.d/:ro
+    networks:
+      - backend
+      - admin
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - admin
+  storm-bearer:
+    build: ./storm_bearer
+    environment:
+      - POSTGRES_PASSWORD
+      - POSTGRES_USER
+      - POSTGRES_DB=${POSTGRES_USER}
+      - DB_SERVICE_HOSTNAME=db
+      - DB_SERVICE_PORT=5432
+    ports:
+      - 6000:6000
+    networks:
+      - backend
+
+    volumes:
+      - ./storm_bearer:/usr/src/app:ro
+
+volumes:
+  db-data:
+networks:
+  admin:
+  backend:
